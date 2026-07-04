@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect, url_for
 import json
 import datetime as dt
 import os
@@ -18,26 +18,24 @@ def read_json():
     except FileNotFoundError:
         return {} 
 
-def get_articles_for_home():
-    articles = read_json()
-    if articles:
-        titles_section = " "
-
-        for article_id, article in articles.items():
-            if article_id == "count":
-                continue
-            title = article.get('title')
-            titles_section += f"<a href=/article/{article_id}>{title}</a><br/><br/>"
-        return titles_section
-    return "<h1> No Articles yet </h1>"
+# def get_articles_for_home():
+#     articles = read_json()
+#     if articles:
+#         titles_section = " "
+#
+#         for article_id, article in articles.items():
+#             if article_id == "count":
+#                 continue
+#             title = article.get('title')
+#             titles_section += f"<a href=/article/{article_id}>{title}</a><br/><br/>"
+#         return titles_section
+#     return "<h1> No Articles yet </h1>"
+#
 
 @app.route("/home")
 def index():
-    titles_section = get_articles_for_home()
-    return (
-
-             """ <h1>Personal Blog</h1> """ + titles_section 
-            )
+    articles = read_json()
+    return render_template("home.html", posts=articles)
 
 @app.route("/article/<article_number>")
 def get_content(article_number):
@@ -71,56 +69,30 @@ def get_articles_for_admin():
 
 @app.route("/admin")
 def admin():
-    titles_section = get_articles_for_admin()
-    return ( """ <form action="/new"  method="get">
-                    <input type="submit" value="Create Article">
-                 </form>
-             """ + titles_section
-
-            )
+    articles = read_json()
+    return render_template("admin_dashboard.html", posts=articles)
 
 def create_article(article_id, title, date, content):
     articles = read_json()
     return dict(id=article_id, content=content, title=title , date=date)
 
-@app.route("/new")
+@app.route("/new", methods=["GET", "POST"])
 def new_article():
-    articles = read_json()
+    if request.method == "POST":
+        articles = read_json()
 
-    title = request.args.get("title", "")
-    date = request.args.get("date", "")
-    content = request.args.get("content", "")
-    
-    if title and date and content:
+        title = request.form.get("title")
+        date = request.form.get("date")
+        content = request.form.get("content")
+        
         if not articles.get('count'):
             articles['count'] = 1
         new_article = create_article(articles['count'], title, date, content)
         articles[new_article.get('id')] = new_article
         articles['count'] += 1
         write_json(articles)
-
-    return  (
-         """ <form action="/admin" method="get">
-                <input type="submit" value="admin">
-             </form>
-         """ +
-            """
-            <form action="" method="get">
-                <input type="text" name="title" placeholder="Article Title">
-                <br/>
-                <br/>
-                <input type="text" name="date" placeholder="Publishing date">
-                <br/>
-                <br/>
-                <label>Article Content</label>
-                <br/>
-                <textarea name="content"> </textarea>
-                <br/>
-                <br/>
-                <input type="submit" value="Publish"></input>
-            </form>
-            """
-            )
+        return redirect(url_for("admin"))
+    return render_template("new_article.html")
 
 def edit_article(article_id, title, date, content):
     articles = read_json()
@@ -137,47 +109,28 @@ def edit_article(article_id, title, date, content):
 
             return True
 
-@app.route("/edit/<article_id>", methods=['GET'])
+@app.route("/edit/<article_id>", methods=['GET', 'POST'])
 def update_article(article_id):
     articles = read_json()
+    article = articles.get(article_id)
 
-    if articles:
-        article = articles.get(article_id)
-        if article:
-            title = request.args.get("title", "")
-            date = request.args.get("date", "")
-            content = request.args.get("content", "")
+    if request.method == "POST":
+        if articles:
+            title = request.form.get("title")
+            date = request.form.get("date")
+            content = request.form.get("content")
             
 
             title = title if title else article['title']
             date = date if date else article['date']
             content = content if content else article['content']
 
-            edit_article(article_id,title, date, content)
+            edit_article(article_id,title, date, content) 
+            return redirect(url_for("admin"))
+
+    return render_template("edit.html", post=article)
 
 
-    return (
-         """ <form action="/admin" method="get">
-                <input type="submit" value="admin">
-             </form>
-         """ +
-            """
-            <form action="" method="get">
-                <input type="text" name="title" placeholder="Article Title">
-                <br/>
-                <br/>
-                <input type="text" name="date" placeholder="Publishing date">
-                <br/>
-                <br/>
-                <label>Article Content</label>
-                <br/>
-                <textarea name="content"> </textarea>
-                <br/>
-                <br/>
-                <input type="submit" value="Update"></input>
-            </form>
-            """
-    )
     
 
 @app.route('/delete/<article_id>', methods=['POST'])

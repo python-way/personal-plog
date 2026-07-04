@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+    <style>
+      body {
+        width: 60vw;
+        margin: auto;
+      }
+      h1 {
+        text-align: center;
+      }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        height: 4rem;
+        font-size: 3rem;
+      }
+      a:any-link {
+        text-decoration: none;
+        color: rgb(30, 148, 216);
+      }
+      .post_item {
+        border: 1px solid black;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        font-size: 2rem;
+      }
+
+      @media screen and (max-width: 800px) {
+        body {
+          width: 95vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Personal Blog</h1>
+    <nav>
+      <a href="/new">+new post</a>
+    </nav>
+    {% if not posts %}
+      <div class="post_title">
+        No Articles Yet
+      </div>
+    {% endif %}
+
+    {% for post_id, post in posts.items()%}
+    {% if post_id != "count" %}
+    <div class="post_item">
+      <a href="/article/{{post_id}}" style="color: black">{{post['title']}}</a>
+      <div class="post_title">
+        <a href="/edit/{{post_id}}">Edit</a>
+        <form action="/delete/{{post_id}}" method="post" style="color: red">
+          <input type="submit" value="Delete"/>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </body>
+</html>
