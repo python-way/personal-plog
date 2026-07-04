@@ -15,26 +15,6 @@ def read_json():
     except FileNotFoundError:
         return {}
 
-
-
-@app.route("/home")
-def index():
-    titles_section = get_articles_for_home()
-    return (
-
-             """ <h1>Personal Blog</h1> """ + titles_section 
-            )
-
-@app.route("/article/<article_number>")
-def get_article(article_number):
-    articles = read_json()
-    if articles:
-        if articles.get(article_number):
-            return articles.get(article_number).get('content')
-        return "<p> No content yet </p>"
-    return "<h1> No Articles yet </h1>"
-
-
 def get_articles_for_home():
     articles = read_json()
     if articles:
@@ -48,6 +28,43 @@ def get_articles_for_home():
         return titles_section
     return "<h1> No Articles yet </h1>"
 
+@app.route("/home")
+def index():
+    titles_section = get_articles_for_home()
+    return (
+
+             """ <h1>Personal Blog</h1> """ + titles_section 
+            )
+
+@app.route("/article/<article_number>")
+def get_content(article_number):
+    articles = read_json()
+    if articles:
+        if articles.get(article_number):
+            return articles.get(article_number).get('content')
+        return "<p> No content yet </p>"
+    return "<h1> No Articles yet </h1>"
+
+
+def get_articles_for_admin():
+    articles = read_json()
+    titles_section = " "
+
+    if articles: 
+        for article_id, article in articles.items():
+            if article_id == 'count':
+                continue
+            titles_section += f"""
+                                 <div>
+                                    <span>{article['title']}</span>
+                                    <a href=/edit/{article['id']}>Edit</a>
+                                    <form action="/delete/{article_id}" method="POST">
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                 </div>
+                                 """
+        return titles_section
+    return "<h1> No Articles yet </h1>"
 
 @app.route("/admin")
 def admin():
@@ -59,11 +76,9 @@ def admin():
 
             )
 
-
 def create_article(article_id, title, date, content):
     articles = read_json()
     return dict(id=article_id, content=content, title=title , date=date)
-
 
 @app.route("/new")
 def new_article():
@@ -80,9 +95,6 @@ def new_article():
         articles[new_article.get('id')] = new_article
         articles['count'] += 1
         write_json(articles)
-
-
-
 
     return  (
          """ <form action="/admin" method="get">
@@ -183,27 +195,6 @@ def delete_article(article_id):
                      """ 
  
                     )
-
-
-def get_articles_for_admin():
-    articles = read_json()
-    titles_section = " "
-
-    if articles: 
-        for article_id, article in articles.items():
-            if article_id == 'count':
-                continue
-            titles_section += f"""
-                                 <div>
-                                    <span>{article['title']}</span>
-                                    <a href=/edit/{article['id']}>Edit</a>
-                                    <form action="/delete/{article_id}" method="POST">
-                                        <button type="submit">Delete</button>
-                                    </form>
-                                 </div>
-                                 """
-        return titles_section
-    return "<h1> No Articles yet </h1>"
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)
