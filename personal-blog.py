@@ -1,6 +1,9 @@
 from flask import Flask, request
 import json
 import datetime as dt
+import os
+
+### TODO apply escape
 
 app = Flask(__name__)
 
@@ -13,7 +16,7 @@ def read_json():
             articles = json.load(file)
         return articles
     except FileNotFoundError:
-        return {}
+        return {} 
 
 def get_articles_for_home():
     articles = read_json()
@@ -100,8 +103,7 @@ def new_article():
          """ <form action="/admin" method="get">
                 <input type="submit" value="admin">
              </form>
-         """ 
-            +
+         """ +
             """
             <form action="" method="get">
                 <input type="text" name="title" placeholder="Article Title">
