@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
+from markupsafe import escape
 import json
 import datetime as dt
 import os
@@ -18,20 +19,6 @@ def read_json():
     except FileNotFoundError:
         return {} 
 
-# def get_articles_for_home():
-#     articles = read_json()
-#     if articles:
-#         titles_section = " "
-#
-#         for article_id, article in articles.items():
-#             if article_id == "count":
-#                 continue
-#             title = article.get('title')
-#             titles_section += f"<a href=/article/{article_id}>{title}</a><br/><br/>"
-#         return titles_section
-#     return "<h1> No Articles yet </h1>"
-#
-
 @app.route("/home")
 def index():
     articles = read_json()
@@ -42,30 +29,10 @@ def get_content(article_number):
     articles = read_json()
     if articles:
         if articles.get(article_number):
-            return articles.get(article_number).get('content')
+            return escape(articles.get(article_number).get('content'))
         return "<p> No content yet </p>"
     return "<h1> No Articles yet </h1>"
 
-
-def get_articles_for_admin():
-    articles = read_json()
-    titles_section = " "
-
-    if articles: 
-        for article_id, article in articles.items():
-            if article_id == 'count':
-                continue
-            titles_section += f"""
-                                 <div>
-                                    <span>{article['title']}</span>
-                                    <a href=/edit/{article['id']}>Edit</a>
-                                    <form action="/delete/{article_id}" method="POST">
-                                        <button type="submit">Delete</button>
-                                    </form>
-                                 </div>
-                                 """
-        return titles_section
-    return "<h1> No Articles yet </h1>"
 
 @app.route("/admin")
 def admin():
