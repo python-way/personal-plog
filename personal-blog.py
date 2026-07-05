@@ -28,8 +28,9 @@ def index():
 def get_content(article_number):
     articles = read_json()
     if articles:
-        if articles.get(article_number):
-            return escape(articles.get(article_number).get('content'))
+        article = articles.get(article_number)
+        if article:
+            return render_template("view_article.html", post=article)
         return "<p> No content yet </p>"
     return "<h1> No Articles yet </h1>"
 
@@ -54,6 +55,7 @@ def new_article():
         
         if not articles.get('count'):
             articles['count'] = 1
+
         new_article = create_article(articles['count'], title, date, content)
         articles[new_article.get('id')] = new_article
         articles['count'] += 1
